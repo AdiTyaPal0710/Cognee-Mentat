@@ -56,6 +56,7 @@ async def ingest_document(file: UploadFile = File(...)):
     Uses dataset_name = filename so individual papers can be forgotten later.
     """
     safe_name = os.path.basename(file.filename or "upload")
+    dataset_name = safe_name.replace(".", "_").replace(" ", "_")
     file_path = f"./temp_{safe_name}"
 
     try:
@@ -63,7 +64,7 @@ async def ingest_document(file: UploadFile = File(...)):
             content = await file.read()
             await f.write(content)
 
-        await cognee.remember(file_path, dataset_name=safe_name)
+        await cognee.remember(file_path, dataset_name=dataset_name)
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Ingestion failed: {str(e)}")
@@ -71,7 +72,7 @@ async def ingest_document(file: UploadFile = File(...)):
         if os.path.exists(file_path):
             os.remove(file_path)
 
-    return {"status": "success", "message": f"{safe_name} ingested.", "dataset": safe_name}
+    return {"status": "success", "message": f"{safe_name} ingested.", "dataset": dataset_name}
 
 
 @app.get("/graph")
